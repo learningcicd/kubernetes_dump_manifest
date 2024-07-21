@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the export directory path
-EXPORT_DIR="/c/Users/Amir/export-demo"
+EXPORT_DIR="/home/junaid/export-demo"
 
 # Create the directory if it doesn't exist
 mkdir -p "$EXPORT_DIR"
@@ -93,6 +93,12 @@ check_and_export() {
         kubectl get pvc -n "$namespace" -o yaml > "$export_dir/pvc.yaml"
       } || echo "No PersistentVolumeClaims found in namespace $namespace."
       ;;
+    "poddisruptionbudgets")
+      kubectl get poddisruptionbudgets -n "$namespace" --no-headers | grep -q . && {
+        echo "Exporting poddisruptionbudgets..."
+        kubectl get poddisruptionbudgets -n "$namespace" -o yaml > "$export_dir/poddisruptionbudgets.yaml"
+      } || echo "No PodDisruptionBudgets found in namespace $namespace."
+      ;;
     *)
       echo "Resource type $resource_type is not supported."
       ;;
@@ -114,10 +120,11 @@ RESOURCE_TYPES=(
   "ingresses"
   "pv"
   "pvc"
+  "poddisruptionbudgets"
 )
 
-# Get list of namespaces except 'default', 'kube-node-lease', 'kube-public', and 'kube-system'
-namespaces=$(kubectl get namespaces --no-headers | awk '$1 != "default" && $1 != "kube-node-lease" && $1 != "kube-public" && $1 != "kube-system" {print $1}')
+# Get list of namespaces except 'default', 'kube-node-lease', 'kube-public', 'kube-system', and 'gatekeeper-system'
+namespaces=$(kubectl get namespaces --no-headers | awk '$1 != "default" && $1 != "kube-node-lease" && $1 != "kube-public" && $1 != "kube-system" && $1 != "gatekeeper-system" {print $1}')
 
 # Loop through each namespace and export resources
 for namespace in $namespaces; do
