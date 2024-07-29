@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-ress
+  namespace: demo-res
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-ress
+  template:
+    metadata:
+      labels:
+        app: demo-ress
+    spec:
+      containers:
+      - name: res
+        image: busybox
+        command: ["sh", "-c", 'while true; do echo "Running..."; sleep 2h; done']
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 3000
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: "RuntimeDefault"
