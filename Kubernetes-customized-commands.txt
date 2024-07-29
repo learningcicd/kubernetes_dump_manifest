@@ -1,0 +1,36 @@
+
+1- List pods scheduled on nodes
+kubectl get pods -o wide --all-namespaces
+
+2- List pods on nodes that are not in running state
+kubectl get pods --all-namespaces --field-selector=status.phase!=Running
+
+3- Force delete a pod or pods in non running state
+kubectl delete pod <pod_name> --namespace <namespace> --grace-period=0 --force
+
+kubectl get pods --all-namespaces --field-selector=status.phase!=Running -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}' | xargs -n2 bash -c 'kubectl delete pod $1 --namespace $0 --grace-period=0 --force'
+
+4- Cordon nodes
+kubectl cordon <node_name>
+
+5-  ⁠List images in pods in all namespaces
+kubectl get pods --all-namespaces -o jsonpath="{range .items[*]}{.spec.containers[*].image}{'\n'}{end}"
+
+6- Check progress of a deployment status
+kubectl rollout status deployment/<deployment_name> --namespace <namespace>
+
+7- List nodes with taints and tolerances
+kubectl get nodes -o json | jq -r '.items[] | select(.spec.taints != null) | .metadata.name as $node | .spec.taints[] | [$node, .key, .value, .effect] | @csv'
+
+8- Get list  of pods that’s based on last restart time
+kubectl get pods --all-namespaces -o json | jq -r '.items[] | select(.spec.tolerations != null) | .metadata.name as $pod | .spec.tolerations[] | [$pod, .key, .operator, .value, .effect] | @csv'
+
+9- Get list of pods that has not been restarted since last 30 days
+kubectl get pods --all-namespaces -o json | jq -r --arg date "$(date -d '30 days ago' --utc +%FT%TZ)" '.items[] | select(.status.containerStatuses != null) | .metadata.name as $pod | .status.containerStatuses[] | select(.lastState.terminated.finishedAt < $date or .lastState.terminated.finishedAt == null) | [$pod, .lastState.terminated.finishedAt] | @csv'
+
+10- List pod wise cpu and memory consumption
+kubectl top pods --all-namespaces
+
+
+
+
