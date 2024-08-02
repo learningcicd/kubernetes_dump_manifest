@@ -1,0 +1,49 @@
+# Namespace configuration
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-audit
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/audit-version: latest
+---
+# Deployment configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit-basline
+  namespace: demo-audit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audit-basline
+  template:
+    metadata:
+      labels:
+        app: audit-basline
+    spec:
+      containers:
+      - name: auditbasline
+        image: busybox
+        command: ["sh", "-c", 'while true; do echo "Running..."; sleep 2h; done']
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 3000
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          privileged: false
+          seLinuxOptions:
+            level: "s0:c123,c456"
+          seccompProfile:
+            type: "RuntimeDefault"
+        volumeMounts:
+        - name: host-pv
+          mountPath: /host
+      volumes:
+      - name: host-pv
+        hostPath:
+          path: /data
+      dnsPolicy: Default
