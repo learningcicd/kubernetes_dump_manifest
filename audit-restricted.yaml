@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: audit-restricted
+  labels:
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-restricted
+  namespace: audit-restricted
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-restricted
+  template:
+    metadata:
+      labels:
+        app: demo-restricted
+    spec:
+      containers:
+      - name: restricted
+        image: busybox
+        command: ["sh", "-c", 'while true; do echo "Running..."; sleep 2h; done']
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 1000
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: "RuntimeDefault"
+        volumeMounts:
+        - name: host-path-volume
+          mountPath: /host
+      volumes:
+      - name: host-path-volume
+        hostPath:
+          path: /data
+      dnsPolicy: Default
