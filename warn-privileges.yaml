@@ -1,0 +1,49 @@
+kind: Namespace
+metadata:
+  name: demo-warn
+  labels:
+    pod-security.kubernetes.io/warn: privileged
+    pod-security.kubernetes.io/warn-version: latest
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-advanced-security
+  namespace: demo-warn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-advanced-security
+  template:
+    metadata:
+      labels:
+        app: demo-advanced-security
+    spec:
+      containers:
+      - name: advanced-security
+        image: busybox
+        command: ["sh", "-c", 'while true; do echo "Running..."; sleep 2h; done']
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+          allowPrivilegeEscalation: true
+          capabilities:
+            add: ["ALL"]
+            drop: ["NET_RAW"]
+          privileged: true
+          seLinuxOptions:
+            level: "s0:c123,c456"
+          seccompProfile:
+            type: "RuntimeDefault"
+        volumeMounts:
+        - name: host-path-volume
+          mountPath: /host
+      volumes:
+      - name: host-path-volume
+        hostPath:
+          path: /data
+      dnsPolicy: Default
