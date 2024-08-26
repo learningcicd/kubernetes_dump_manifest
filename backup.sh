@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the export directory path
-EXPORT_DIR="/home/junaid/export-demo"
+EXPORT_DIR="/c/Users/elina/backup/dump"
 
 # Create the directory if it doesn't exist
 mkdir -p "$EXPORT_DIR"
